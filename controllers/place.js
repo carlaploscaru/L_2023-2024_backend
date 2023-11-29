@@ -1,5 +1,6 @@
 const { Place } = require("../models/place");
 const { Category } = require("../models/category");
+const { User } = require("../models/user");
 
 /*exports.addPlace = async (req, res, next) => {
     try {
@@ -67,6 +68,7 @@ exports.addPlace = async (req, res, next) => {
     try {
         const category = await Category.findById(req.body.categoryId);
 
+
         if (!category) {
             const error = new Error("Category does not exist!");
             error.statusCode = 401;
@@ -97,12 +99,69 @@ exports.getPlaces = async (req, res, next) => {
 
     try {
         places = await Place.find();
+        let owner;
+        let category;
 
-        res.status(200).send({ places: places });
+        let placesToSend = await Promise.all(
+            places.map(async (place) => {
+                owner = await User.findById(place.owner);
+
+
+
+                return {
+                    _id: place._id,
+                    title: place.title,
+                    suprafata: place.suprafata,
+                    tara: place.tara,
+                    oras: place.oras,
+                    judet: place.judet,
+                    strada: place.strada,
+                    category: place.category,
+                    owner: owner.name
+                };
+            })
+        );
+        res.status(200).send({ places: placesToSend });
     } catch (error) {
         next(error)
     }
 };
+
+
+exports.getPlaceById = async (req, res, next) => {
+    const placeId = req.params.placeId;
+  
+    try {
+      const place = await Place.findById(placeId);
+      
+  
+      if (!place) {
+        const error = new Error("There is no place for this id");
+        error.statusCode = 401;
+        throw error;
+      }
+  
+      const owner = await User.findById(place.owner);
+      const category = await Category.findById(place.category);
+  
+      const placeToSend = {
+        _id: place._id,
+        title: place.title,
+        suprafata: place.suprafata,
+        tara: place.tara,
+        oras: place.oras,
+        judet: place.judet,
+        strada: place.strada,
+        category: category,
+        owner: owner.name,
+      };
+  
+      res.status(200).send({ place: placeToSend });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 
 exports.editPlace = async (req, res, next) => {
     const placeId = req.params.placeId;
@@ -122,7 +181,10 @@ exports.editPlace = async (req, res, next) => {
             throw error;
         }
 
-
+        // if (req.userId) {
+        //     const owner = await Category.findById(req.userId);
+        //     place.owner = { _id: owner._id, name: owner.name }
+        // }
 
         if (place.owner._id.valueOf() !== req.userId) {
             const error = new Error("Not authorized for this asset!");
@@ -133,9 +195,11 @@ exports.editPlace = async (req, res, next) => {
         place.title = req.body.title || oldPlace.title;
         place.suprafata = req.body.suprafata || oldPlace.suprafata;
         place.tara = req.body.tara || oldPlace.tara;
-        // place.oras = req.body.oras || oldPlace.oras;
+        place.oras = req.body.oras || oldPlace.oras;
         place.judet = req.body.judet || oldPlace.judet;
-        // place.strada = req.body.starda || oldPlace.strada;
+        place.strada = req.body.starda || oldPlace.strada;
+        place.category = req.body.category || oldPlace.category;
+        place.owner = req.body.owner || oldPlace.owner;
 
         await place.save();
 
