@@ -1,6 +1,7 @@
 const { Place } = require("../models/place");
 const { Category } = require("../models/category");
 const { User } = require("../models/user");
+const { validationResult } = require("express-validator");
 
 /*exports.addPlace = async (req, res, next) => {
     try {
@@ -65,6 +66,7 @@ const { User } = require("../models/user");
 
 
 exports.addPlace = async (req, res, next) => {
+    const errors = validationResult(req);
     try {
         const category = await Category.findById(req.body.categoryId);
 
@@ -75,6 +77,13 @@ exports.addPlace = async (req, res, next) => {
             throw error;
         }
 
+        if(!errors.isEmpty()) {
+            const error = new Error("Adaugare proprietate esuata");
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
+          }
+
         let place = new Place({
             title: req.body.title,
             suprafata: req.body.suprafata,
@@ -82,7 +91,7 @@ exports.addPlace = async (req, res, next) => {
             oras: req.body.oras,
             judet: req.body.judet,
             strada: req.body.strada,
-            category: { _id: category._id, title: category.title },
+            category: { _id: req.body.categoryId, title: category.title},
             owner: req.userId
         });
         await place.save();
@@ -96,6 +105,7 @@ exports.addPlace = async (req, res, next) => {
 
 exports.getPlaces = async (req, res, next) => {
     let places = [];
+    
 
     try {
         places = await Place.find();
@@ -153,7 +163,7 @@ exports.getPlaceById = async (req, res, next) => {
         judet: place.judet,
         strada: place.strada,
         category: category,
-        owner: owner.name,
+        owner: { name: owner.name, id: owner._id }
       };
   
       res.status(200).send({ place: placeToSend });
@@ -165,32 +175,37 @@ exports.getPlaceById = async (req, res, next) => {
 
 exports.editPlace = async (req, res, next) => {
     const placeId = req.params.placeId;
+    const errors = validationResult(req);
 
     try {
         const place = await Place.findById(placeId);
         const oldPlace = place;
 
-        if (req.body.categoryId) {
-            const category = await Category.findById(req.body.categoryId);
-            place.category = { _id: category._id, title: category.title }
-        }
+    
+       
+        
+        if(!errors.isEmpty()) {
+            const error = new Error("Adaugare proprietate esuata");
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
+          }
+
 
         if (!place) {
             const error = new Error("Place does not exist!");
-            error.statusCode = 403;
+            error.statusCode = 422;
             throw error;
         }
-
-        // if (req.userId) {
-        //     const owner = await Category.findById(req.userId);
-        //     place.owner = { _id: owner._id, name: owner.name }
-        // }
 
         if (place.owner._id.valueOf() !== req.userId) {
             const error = new Error("Not authorized for this asset!");
             error.statusCode = 422;
             throw error;
         }
+
+        const category = await Category.findById(req.body.categoryId);
+        place.category = { _id: category._id, title: category.title }
 
         place.title = req.body.title || oldPlace.title;
         place.suprafata = req.body.suprafata || oldPlace.suprafata;
@@ -209,3 +224,29 @@ exports.editPlace = async (req, res, next) => {
         next(error);
     }
 }
+
+exports.deletePlace = async (req, res, next) => {
+    const placeId = req.params.placeId;
+  
+    try {
+      const place = await Place.findById(placeId);
+  
+      if (!place) {
+        const error = new Error("Could not find place.");
+        error.statusCode = 422;
+        throw error;
+      }
+  
+      if (place.owner._id.toString() !== req.userId) {
+        const error = new Error("Not authorized!");
+        error.statusCode = 422;
+        throw error;
+      }
+  
+      await Place.deleteOne({ _id: placeId });
+  
+      res.status(200).json({ message: "Deleted property!" });
+    } catch (error) {
+      next(error);
+    }
+  };
