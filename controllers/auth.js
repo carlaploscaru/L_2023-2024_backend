@@ -36,9 +36,9 @@ exports.signup = async (req, res, next) => {
     // }
 
 
-   
 
-    
+
+
     const buffer = await crypto.randomBytes(32);
     const registryToken = buffer.toString("hex");
     const registryTokenExpiration = Date.now() + 3600000;
@@ -228,7 +228,7 @@ exports.postNewPassword = async (req, res, next) => {
 
   try {
 
-    
+
     const resetToken = req.body.resetToken;
     const newPassword = req.body.password;
     const newRepeatPassword = req.body.repeatPassword;
@@ -277,3 +277,6 @@ exports.postNewPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+
+

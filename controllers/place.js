@@ -3,6 +3,7 @@ const { Category } = require("../models/category");
 const { User } = require("../models/user");
 const { validationResult } = require("express-validator");
 
+
 /*exports.addPlace = async (req, res, next) => {
     try {
 
@@ -67,22 +68,104 @@ const { validationResult } = require("express-validator");
 
 exports.addPlace = async (req, res, next) => {
     const errors = validationResult(req);
+    let picsArray = [];
+    let docsArray = [];
+    let docsNameArray = [];
+
+
     try {
         const category = await Category.findById(req.body.categoryId);
 
 
-        if (!category) {
-            const error = new Error("Category does not exist!");
+        // if (!category) {
+        //     const error = new Error("Category does not exist!");
+        //     error.statusCode = 401;
+        //     throw error;
+        // }
+
+
+
+        // if (!errors.isEmpty()) {
+        //     const error = new Error("Adaugare proprietate esuata");
+        //     error.statusCode = 422;
+        //     error.data = errors.array();
+        //     throw error;
+        // }
+
+
+        let errors = [];
+
+        if (!req.body.title) {
+            const error = new Error("Proprietatea trebuie sa aiba titlu");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.suprafata && !Number.isInteger(req.body.suprafata)) {
+            const error = new Error(
+                "Proprietatea trebuie sa aiba suprafata si aceasta valoare sa fie numar intreg"
+            );
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.tara) {
+            const error = new Error("Proprietatea trebuie sa aiba tara");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.oras) {
+            const error = new Error("Proprietatea trebuie sa aiba oras");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.strada) {
+            const error = new Error("Proprietatea trebuie sa aiba strada");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.judet) {
+            const error = new Error("Proprietatea trebuie sa aiba judet");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.categoryId) {
+            const error = new Error("Proprietatea trebuie sa aiba categorie");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.files["image"]) {
+            const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        //console.log(errors);
+
+        if (errors.length !== 0) {
+            const error = new Error("Adaugare proprietate esuata");
             error.statusCode = 401;
+            error.data = errors;
+
             throw error;
         }
 
-        if(!errors.isEmpty()) {
-            const error = new Error("Adaugare proprietate esuata");
-            error.statusCode = 422;
-            error.data = errors.array();
-            throw error;
-          }
+        req.files["image"].map((file) => {
+            picsArray.push(file.path);
+        });
+
+        if (req.files["docs"]) {
+            req.files["docs"].map((file) => {
+                console.log(file);
+                docsNameArray.push(file.originalname);
+                docsArray.push(file.path);
+            });
+        }
 
         let place = new Place({
             title: req.body.title,
@@ -91,8 +174,11 @@ exports.addPlace = async (req, res, next) => {
             oras: req.body.oras,
             judet: req.body.judet,
             strada: req.body.strada,
-            category: { _id: req.body.categoryId, title: category.title},
-            owner: req.userId
+            category: { _id: req.body.categoryId, title: category.title },
+            owner: req.userId,
+            image: picsArray,
+            docs: docsArray,
+            docNames: docsNameArray
         });
         await place.save();
 
@@ -105,7 +191,7 @@ exports.addPlace = async (req, res, next) => {
 
 exports.getPlaces = async (req, res, next) => {
     let places = [];
-    
+
 
     try {
         places = await Place.find();
@@ -140,68 +226,124 @@ exports.getPlaces = async (req, res, next) => {
 
 exports.getPlaceById = async (req, res, next) => {
     const placeId = req.params.placeId;
-  
+
     try {
-      const place = await Place.findById(placeId);
-      
-  
-      if (!place) {
-        const error = new Error("There is no place for this id");
-        error.statusCode = 401;
-        throw error;
-      }
-  
-      const owner = await User.findById(place.owner);
-      const category = await Category.findById(place.category);
-  
-      const placeToSend = {
-        _id: place._id,
-        title: place.title,
-        suprafata: place.suprafata,
-        tara: place.tara,
-        oras: place.oras,
-        judet: place.judet,
-        strada: place.strada,
-        category: category,
-        owner: { name: owner.name, id: owner._id }
-      };
-  
-      res.status(200).send({ place: placeToSend });
+        const place = await Place.findById(placeId);
+
+
+        if (!place) {
+            const error = new Error("There is no place for this id");
+            error.statusCode = 401;
+            throw error;
+        }
+
+        const owner = await User.findById(place.owner);
+        const category = await Category.findById(place.category);
+
+        const placeToSend = {
+            _id: place._id,
+            title: place.title,
+            suprafata: place.suprafata,
+            tara: place.tara,
+            oras: place.oras,
+            judet: place.judet,
+            strada: place.strada,
+            category: category,
+            owner: { name: owner.name, id: owner._id },
+            image: place.image,
+        };
+
+        res.status(200).send({ place: placeToSend });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  };
+};
 
 
 exports.editPlace = async (req, res, next) => {
     const placeId = req.params.placeId;
     const errors = validationResult(req);
 
+    let picsArray = [];
+    let docsArray = [];
+    let docsNameArray = [];
+
     try {
         const place = await Place.findById(placeId);
         const oldPlace = place;
 
-    
-       
-        
-        if(!errors.isEmpty()) {
+        let errors = [];
+
+        if (!req.body.title) {
+            const error = new Error("Proprietatea trebuie sa aiba titlu");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.suprafata && !Number.isInteger(req.body.suprafata)) {
+            const error = new Error(
+                "Proprietatea trebuie sa aiba suprafata si aceasta valoare sa fie numar intreg"
+            );
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.tara) {
+            const error = new Error("Proprietatea trebuie sa aiba tara");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.oras) {
+            const error = new Error("Proprietatea trebuie sa aiba oras");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.strada) {
+            const error = new Error("Proprietatea trebuie sa aiba strada");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.judet) {
+            const error = new Error("Proprietatea trebuie sa aiba judet");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.categoryId) {
+            const error = new Error("Proprietatea trebuie sa aiba categorie");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.files["image"]) {
+            const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        //console.log(errors);
+
+        if (errors.length !== 0) {
             const error = new Error("Adaugare proprietate esuata");
-            error.statusCode = 422;
-            error.data = errors.array();
-            throw error;
-          }
+            error.statusCode = 401;
+            error.data = errors;
 
-
-        if (!place) {
-            const error = new Error("Place does not exist!");
-            error.statusCode = 422;
             throw error;
         }
 
-        if (place.owner._id.valueOf() !== req.userId) {
-            const error = new Error("Not authorized for this asset!");
-            error.statusCode = 422;
-            throw error;
+        req.files["image"].map((file) => {
+            picsArray.push(file.path);
+        });
+
+        if (req.files["docs"]) {
+            req.files["docs"].map((file) => {
+                console.log(file);
+                docsNameArray.push(file.originalname);
+                docsArray.push(file.path);
+            });
         }
 
         const category = await Category.findById(req.body.categoryId);
@@ -214,7 +356,8 @@ exports.editPlace = async (req, res, next) => {
         place.judet = req.body.judet || oldPlace.judet;
         place.strada = req.body.starda || oldPlace.strada;
         place.category = req.body.category || oldPlace.category;
-        place.owner = req.body.owner || oldPlace.owner;
+        // place.owner = req.body.owner || oldPlace.owner;
+        place.image = picsArray || oldPlace.image;
 
         await place.save();
 
@@ -227,26 +370,26 @@ exports.editPlace = async (req, res, next) => {
 
 exports.deletePlace = async (req, res, next) => {
     const placeId = req.params.placeId;
-  
+
     try {
-      const place = await Place.findById(placeId);
-  
-      if (!place) {
-        const error = new Error("Could not find place.");
-        error.statusCode = 422;
-        throw error;
-      }
-  
-      if (place.owner._id.toString() !== req.userId) {
-        const error = new Error("Not authorized!");
-        error.statusCode = 422;
-        throw error;
-      }
-  
-      await Place.deleteOne({ _id: placeId });
-  
-      res.status(200).json({ message: "Deleted property!" });
+        const place = await Place.findById(placeId);
+
+        if (!place) {
+            const error = new Error("Could not find place.");
+            error.statusCode = 422;
+            throw error;
+        }
+
+        if (place.owner._id.toString() !== req.userId) {
+            const error = new Error("Not authorized!");
+            error.statusCode = 422;
+            throw error;
+        }
+
+        await Place.deleteOne({ _id: placeId });
+
+        res.status(200).json({ message: "Deleted property!" });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  };
+};
