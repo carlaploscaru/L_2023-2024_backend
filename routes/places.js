@@ -81,5 +81,6 @@ router.patch('/:placeId', [
 
 
 router.delete("/:placeId", isAuth, placeController.deletePlace)
+router.delete("/image/:imageAndPlaceId", isAuth, placeController.deleteImageByPlaceAndImgId);
 
 module.exports = router;

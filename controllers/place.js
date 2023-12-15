@@ -272,6 +272,8 @@ exports.editPlace = async (req, res, next) => {
         const place = await Place.findById(placeId);
         const oldPlace = place;
 
+        picsArray=place.image;
+
         let errors = [];
 
         if (!req.body.title) {
@@ -318,10 +320,13 @@ exports.editPlace = async (req, res, next) => {
             errors.push(error.message);
         }
 
-        if (!req.files["image"]) {
+        if (place.image.length > 0) {
+        } else {
+          if (!req.files["image"]) {
             const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
             error.statusCode = 422;
             errors.push(error.message);
+          }
         }
 
         //console.log(errors);
@@ -334,9 +339,11 @@ exports.editPlace = async (req, res, next) => {
             throw error;
         }
 
-        req.files["image"].map((file) => {
-            picsArray.push(file.path);
-        });
+        if(req.files['image']) {
+            req.files["image"].map((file) => {
+              picsArray.push(file.path);
+            });
+          }
 
         if (req.files["docs"]) {
             req.files["docs"].map((file) => {
@@ -367,6 +374,23 @@ exports.editPlace = async (req, res, next) => {
         next(error);
     }
 }
+exports.deleteImageByPlaceAndImgId = async (req, res, next) => {
+    const imageAndPlaceId = req.params.imageAndPlaceId;
+  
+    const place = await Place.findById(imageAndPlaceId.split("separator")[1]);
+  
+    let newImages = place.image.filter(
+      (img) => img !== "uploads\\images\\" + imageAndPlaceId.split("separator")[0]
+    );
+  
+    place.image = newImages;
+  
+    place.save();
+  
+    imageAndPlaceId.split("separator");
+  
+    res.status(200).send({ message: "bine" });
+  };
 
 exports.deletePlace = async (req, res, next) => {
     const placeId = req.params.placeId;
