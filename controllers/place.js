@@ -213,7 +213,8 @@ exports.getPlaces = async (req, res, next) => {
                     judet: place.judet,
                     strada: place.strada,
                     category: place.category,
-                    owner: owner.name
+                    owner: owner.name,
+                    image: place.image
                 };
             })
         );

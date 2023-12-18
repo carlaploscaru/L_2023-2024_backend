@@ -36,7 +36,12 @@ const userSchema = mongoose.Schema({//obj relational mapping
     isOwner: {
         type: Boolean,
         required: false
-    }
+    },
+    image: {
+        type: String,
+        required: false
+      }
+
 });
 
 const User=mongoose.model("User", userSchema);
