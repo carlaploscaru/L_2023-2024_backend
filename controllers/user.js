@@ -1,4 +1,5 @@
 const { User } = require("../models/user");
+const { validationResult } = require("express-validator");
 
 exports.getUsers = async (req, res, next) => {
   let users = [];
@@ -36,37 +37,51 @@ exports.getMe = async (req, res, next) => {
       image: me.image
     };
 
-    res.status(200).send({me: meToSend});
+    res.status(200).send({ me: meToSend });
   } catch (err) {
     next(err);
   }
 };
 
 exports.editUser = async (req, res, next) => {
-    const userId = req.userId;
-    try {
-      let user = await User.findById(userId);
   
-      if (user) {
-        if (req.body.name) {
-          user.name = req.body.name;
-        }
-  
-        if (req.body.email) {
-          user.email = req.body.email;
-        }
-  
-        console.log(req.files["image"]);
-  
-        if (req.files && req.files["image"]) {
-          user.image = req.files["image"][0].path;
-        }
-        await user.save();
+
+  const userId = req.userId;
+  try {
+    let errors = [];
+    let user = await User.findById(userId);
+
+    if (user) {
+      if (req.body.name) {
+        user.name = req.body.name;
       }
-  
-      res.status(200).send(user);
-    } catch (error) {
-      console.log(error);
-      next(error);
+
+      if (!req.body.name) {
+        const error = new Error(" Userul trebuie sa aiba nume!");
+        error.statusCode = 422;
+        errors.push(error.message);
+      }
+      
+
+
+      if (errors.length !== 0) {
+        const error = new Error("User edit failed!");
+        error.statusCode = 401;
+        error.data = errors;
+        throw error;
+      }
+      
+      console.log(req.files["image"]);
+
+      if (req.files && req.files["image"]) {
+        user.image = req.files["image"][0].path;
+      }
+      await user.save();
     }
-  };
+
+    res.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};

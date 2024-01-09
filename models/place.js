@@ -38,8 +38,9 @@ const placeSchema = mongoose.Schema({//obj relational mapping
     type: String,
   },
   category: {
-    type: categorySchema,
-    required: true,
+    type: mongoose.Types.ObjectId,
+    require: true,
+    ref: "Category",
   },
 
 

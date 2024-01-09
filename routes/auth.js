@@ -60,6 +60,12 @@ router.post("/confirm-account-registry", [
 
 
 
+router.get(
+  "/confirm-account-registry/:registryToken",
+  authController.confirmAccountFromEmail
+);
+
+
 router.post("/reset", [
   body("email")
     .isLength({ min: 3 })

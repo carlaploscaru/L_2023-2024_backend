@@ -174,7 +174,7 @@ exports.addPlace = async (req, res, next) => {
             oras: req.body.oras,
             judet: req.body.judet,
             strada: req.body.strada,
-            category: { _id: req.body.categoryId, title: category.title },
+            category: { _id: req.body.categoryId },
             owner: req.userId,
             image: picsArray,
             docs: docsArray,
@@ -191,16 +191,31 @@ exports.addPlace = async (req, res, next) => {
 
 exports.getPlaces = async (req, res, next) => {
     let places = [];
+    let queryObject = {};
 
 
     try {
-        places = await Place.find();
+        if (req.query.oras) {
+            queryObject.oras = req.query.oras;
+        }
+
+        if (req.query.categoryId) {
+            queryObject.category = req.query.categoryId;
+        }
+
+        if (req.query.tara) {
+            queryObject.tara = req.query.tara;
+        }
+
+
+        places = await Place.find(queryObject);
         let owner;
         let category;
 
         let placesToSend = await Promise.all(
             places.map(async (place) => {
                 owner = await User.findById(place.owner);
+                category = await Category.findById(place.category);
 
 
 
@@ -212,7 +227,7 @@ exports.getPlaces = async (req, res, next) => {
                     oras: place.oras,
                     judet: place.judet,
                     strada: place.strada,
-                    category: place.category,
+                    category: category.title,
                     owner: owner.name,
                     image: place.image
                 };
@@ -273,7 +288,7 @@ exports.editPlace = async (req, res, next) => {
         const place = await Place.findById(placeId);
         const oldPlace = place;
 
-        picsArray=place.image;
+        picsArray = place.image;
 
         let errors = [];
 
@@ -323,11 +338,11 @@ exports.editPlace = async (req, res, next) => {
 
         if (place.image.length > 0) {
         } else {
-          if (!req.files["image"]) {
-            const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
-            error.statusCode = 422;
-            errors.push(error.message);
-          }
+            if (!req.files["image"]) {
+                const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
+                error.statusCode = 422;
+                errors.push(error.message);
+            }
         }
 
         //console.log(errors);
@@ -340,11 +355,11 @@ exports.editPlace = async (req, res, next) => {
             throw error;
         }
 
-        if(req.files['image']) {
+        if (req.files['image']) {
             req.files["image"].map((file) => {
-              picsArray.push(file.path);
+                picsArray.push(file.path);
             });
-          }
+        }
 
         if (req.files["docs"]) {
             req.files["docs"].map((file) => {
@@ -355,15 +370,16 @@ exports.editPlace = async (req, res, next) => {
         }
 
         const category = await Category.findById(req.body.categoryId);
-        place.category = { _id: category._id, title: category.title }
+
+
+        place.category = { _id: category._id } || oldPlace.category;
 
         place.title = req.body.title || oldPlace.title;
         place.suprafata = req.body.suprafata || oldPlace.suprafata;
         place.tara = req.body.tara || oldPlace.tara;
         place.oras = req.body.oras || oldPlace.oras;
         place.judet = req.body.judet || oldPlace.judet;
-        place.strada = req.body.starda || oldPlace.strada;
-        place.category = req.body.category || oldPlace.category;
+        place.strada = req.body.strada || oldPlace.strada;
         // place.owner = req.body.owner || oldPlace.owner;
         place.image = picsArray || oldPlace.image;
 
@@ -377,21 +393,21 @@ exports.editPlace = async (req, res, next) => {
 }
 exports.deleteImageByPlaceAndImgId = async (req, res, next) => {
     const imageAndPlaceId = req.params.imageAndPlaceId;
-  
+
     const place = await Place.findById(imageAndPlaceId.split("separator")[1]);
-  
+
     let newImages = place.image.filter(
-      (img) => img !== "uploads\\images\\" + imageAndPlaceId.split("separator")[0]
+        (img) => img !== "uploads\\images\\" + imageAndPlaceId.split("separator")[0]
     );
-  
+
     place.image = newImages;
-  
+
     place.save();
-  
+
     imageAndPlaceId.split("separator");
-  
+
     res.status(200).send({ message: "bine" });
-  };
+};
 
 exports.deletePlace = async (req, res, next) => {
     const placeId = req.params.placeId;

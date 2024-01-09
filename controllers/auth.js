@@ -3,9 +3,13 @@ const bcrypt = require("bcryptjs");//pachet pt criptarea parolei cand inregistre
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
+var nodemailer = require('nodemailer');
+var smtpTransport = require('nodemailer-smtp-transport');
+
 
 exports.signup = async (req, res, next) => {
   const errors = validationResult(req);
+
 
   try {
 
@@ -18,7 +22,6 @@ exports.signup = async (req, res, next) => {
       throw error;
     }
 
-    console.log(user);
     if (user) {
       return res.status(401).send({ message: "User registered already" });
     }
@@ -58,6 +61,36 @@ exports.signup = async (req, res, next) => {
     });//pt a pune in baza de date
 
     await user.save();//pt a pune in baza de date
+
+    var transporter = nodemailer.createTransport({
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      secure: false, // upgrade later with STARTTLS
+      auth: {
+        user: "cornel.siclovan@gmail.com",
+        pass: process.env.BREVO_API_KEY,
+      },
+    });
+    
+    var mailOptions = {
+      from: 'office@rezervari.ro',
+      to: email,
+      subject: 'Sending Email using Node.js[nodemailer]',
+      text:'http://localhost:8000/confirm-account-registry/' + registryToken +' Your registry token is: '+ registryToken
+    };
+
+    try{
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });  
+    } catch(err) {
+      console.log(err);
+    }
+
 
     res.status(200).send(user._id);
   } catch (error) {
@@ -172,7 +205,55 @@ exports.confirmAccount = async (req, res, next) => {
 
 
 
+exports.confirmAccountFromEmail = async (req, res, next) => {
+  const registryToken = req.params.registryToken;
+  const errors = validationResult(req);
 
+  try {
+    if (!errors.isEmpty()) {
+      const error = new Error("Reset failed!");
+      error.statusCode = 422;
+      error.data = errors.array();
+      throw error;
+    }
+
+    if (!registryToken) {
+      const error = new Error("No token available!");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    const user = await User.findOne({ registryToken: registryToken });
+
+    if (!user) {
+      const error = new Error("This user does not exist!");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    if (Date.parse(user.registryTokenExpiration) / 1000 > Date.now()) {
+      const error = new Error("Token expired");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    user.registryToken = null;
+    user.registryTokenExpiration = null;
+
+    await user.save();
+
+    res.writeHead(302, {
+      Location: 'http://localhost:3000/auth?mode=login'
+    });
+  res.end()
+
+    res.status(200).json({
+      message: "Account activated",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 exports.resetPassword = async (req, res, next) => {
