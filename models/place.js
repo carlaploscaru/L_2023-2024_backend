@@ -57,6 +57,12 @@ const placeSchema = mongoose.Schema({//obj relational mapping
   },
   docNames: {
     type: [String]
+  },
+  price: {
+    type :String
+  },
+  currency: {
+    type: String
   }
 });
 

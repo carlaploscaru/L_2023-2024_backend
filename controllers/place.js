@@ -133,6 +133,18 @@ exports.addPlace = async (req, res, next) => {
             errors.push(error.message);
         }
 
+        if (!req.body.price) {
+            const error = new Error("Proprietatea trebuie sa aiba pret");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.currency) {
+            const error = new Error("Tipul de valuat trebuie introdus");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
         if (!req.body.categoryId) {
             const error = new Error("Proprietatea trebuie sa aiba categorie");
             error.statusCode = 422;
@@ -174,6 +186,8 @@ exports.addPlace = async (req, res, next) => {
             oras: req.body.oras,
             judet: req.body.judet,
             strada: req.body.strada,
+            price: req.body.price,
+            currency: req.body.currency,
             category: { _id: req.body.categoryId },
             owner: req.userId,
             image: picsArray,
@@ -199,8 +213,8 @@ exports.getPlaces = async (req, res, next) => {
             queryObject.oras = req.query.oras;
         }
 
-        if (req.query.categoryId) {
-            queryObject.category = req.query.categoryId;
+        if (req.query.category) {
+            queryObject.category = req.query.category;
         }
 
         if (req.query.tara) {
@@ -227,6 +241,8 @@ exports.getPlaces = async (req, res, next) => {
                     oras: place.oras,
                     judet: place.judet,
                     strada: place.strada,
+                    price: place.price || "",
+                    currency: place.currency || "",
                     category: category.title,
                     owner: owner.name,
                     image: place.image
@@ -264,6 +280,8 @@ exports.getPlaceById = async (req, res, next) => {
             oras: place.oras,
             judet: place.judet,
             strada: place.strada,
+            price: place.price || "",
+            currency: place.currency || "",
             category: category,
             owner: { name: owner.name, id: owner._id },
             image: place.image,
@@ -330,6 +348,18 @@ exports.editPlace = async (req, res, next) => {
             errors.push(error.message);
         }
 
+        if (!req.body.price) {
+            const error = new Error("Proprietatea trebuie sa aiba pret");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
+        if (!req.body.currency) {
+            const error = new Error("Tipul de valuat trebuie introdus");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
+
         if (!req.body.categoryId) {
             const error = new Error("Proprietatea trebuie sa aiba categorie");
             error.statusCode = 422;
@@ -379,6 +409,8 @@ exports.editPlace = async (req, res, next) => {
         place.tara = req.body.tara || oldPlace.tara;
         place.oras = req.body.oras || oldPlace.oras;
         place.judet = req.body.judet || oldPlace.judet;
+        place.price = req.body.price || oldPlace.price;
+        place.currency = req.body.currency || oldPlace.currency;
         place.strada = req.body.strada || oldPlace.strada;
         // place.owner = req.body.owner || oldPlace.owner;
         place.image = picsArray || oldPlace.image;
