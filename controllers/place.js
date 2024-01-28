@@ -2,6 +2,7 @@ const { Place } = require("../models/place");
 const { Category } = require("../models/category");
 const { User } = require("../models/user");
 const { validationResult } = require("express-validator");
+const { Sale } = require("../models/sales");
 
 
 /*exports.addPlace = async (req, res, next) => {
@@ -222,16 +223,44 @@ exports.getPlaces = async (req, res, next) => {
         }
 
 
+
         places = await Place.find(queryObject);
         let owner;
         let category;
+
+
+
+        let placesBookedOnThatPeriod = [];
 
         let placesToSend = await Promise.all(
             places.map(async (place) => {
                 owner = await User.findById(place.owner);
                 category = await Category.findById(place.category);
+                   
+                //testez date_start in between
+                if (req.query.data_start && req.query.data_end) {
+                    const sales = await Sale.find({ place: place._id });
+
+                    sales.forEach(sale => {
+                        console.log(sale);
+                        const ds = new Date(sale.data_start);
+                        const de = new Date(sale.data_end);
+                        const ds_req = new Date(req.query.data_start);
+                        const de_req = new Date(req.query.data_end);
+                        
+                        console.log(ds_req.getTime() < ds.getTime());
 
 
+                        if (
+                            (ds_req.getTime() <= ds.getTime() && de_req.getTime() > de.getTime()) ||
+                            (ds_req.getTime() <= ds.getTime() && de_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime()) ||
+                            (ds_req.getTime() >= ds.getTime() && ds_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime())
+                        ) {
+                            console.log("aici");
+                            placesBookedOnThatPeriod.push(place._id);
+                        }
+                    });
+                }
 
                 return {
                     _id: place._id,
@@ -249,7 +278,17 @@ exports.getPlaces = async (req, res, next) => {
                 };
             })
         );
-        res.status(200).send({ places: placesToSend });
+        let filteredPlacesToSend = [];
+        placesToSend.forEach(place => {
+            if (placesBookedOnThatPeriod.includes(place._id)) {
+
+            } else {
+                filteredPlacesToSend.push(place);
+            }
+        })
+
+
+        res.status(200).send({ places: filteredPlacesToSend });
     } catch (error) {
         next(error)
     }

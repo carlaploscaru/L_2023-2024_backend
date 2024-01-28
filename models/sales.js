@@ -1,8 +1,12 @@
 const { mongoose } = require("mongoose");
-const { categorySchema } = require('../models/category');//relationam place cu category
 
 const salesSchema = mongoose.Schema({
     client: {
+        type: mongoose.Types.ObjectId,
+        require: true,
+        ref: "User",
+    },
+    owner: {
         type: mongoose.Types.ObjectId,
         require: true,
         ref: "User",
@@ -17,11 +21,30 @@ const salesSchema = mongoose.Schema({
     },
     data_end: {
         type: String,
+    },
+    price: {
+        type: String,
+    },
+
+    nume: {
+        type: String,
+    },
+    adresa: {
+        type: String,
+    },
+    telefon: {
+        type: String,
+    },
+    pay_type: {
+        type: String,
+        require: true,
     }
+   
+   
 
 
 });
 
-const Sale = mongoose.model("Place", salesSchema);
+const Sale = mongoose.model("Sale", salesSchema);
 exports.Sale = Sale;
 
