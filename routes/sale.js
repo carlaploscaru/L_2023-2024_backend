@@ -16,13 +16,16 @@ router.post("/", isAuth,
 
         body("nume")
             .isLength({ min: 3 })
-            .withMessage("Name can't be empty!"),
+            .withMessage("Name can't be empty! Minim 3 characters."),
         body("adresa")
             .isLength({ min: 3 })
-            .withMessage("Adress can't be empty!"),
+            .withMessage("Adress can't be empty! Minim 3 characters."),
         body("telefon")
             .isLength({ min: 3 })
-            .withMessage("Phone number can't be empty!"),
+            .withMessage("Phone number can't be empty! Minim 3 digits."),
+        body("pay_type")
+            .isLength({min:1})
+            .withMessage("Please select payment type.")
     ], saleControler.addSale);
 
 router.get(
@@ -31,6 +34,17 @@ router.get(
 
 router.get(
     "/clients", isAuth, saleControler.getClientsByOwnerId
+);
+
+router.put(
+    "/:saleId", isAuth, saleControler.rateSale,[
+        body("rateing")
+            .isInt({ min: 0, max: 5})
+            .withMessage("Minim value is 0, maxim is 5."),
+        body("comment")
+            .isLength({ min: 3 })
+            .withMessage("Comment can't be empty!"),
+    ]
 );
 
 module.exports = router;

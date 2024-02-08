@@ -37,12 +37,13 @@ const salesSchema = mongoose.Schema({
     },
     pay_type: {
         type: String,
-        require: true,
+    },
+    rating: {
+        type: Number,
+    },
+    comment: {
+        type: String,
     }
-   
-   
-
-
 });
 
 const Sale = mongoose.model("Sale", salesSchema);

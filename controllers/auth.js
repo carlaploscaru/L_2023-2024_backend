@@ -23,7 +23,7 @@ exports.signup = async (req, res, next) => {
     }
 
     if (user) {
-      return res.status(401).send({ message: "User registered already" });
+      return res.status(401).send({ message: "User already registered!" });
     }
 
     // if (!req.body.repeatPassword) {
@@ -67,8 +67,8 @@ exports.signup = async (req, res, next) => {
       port: 587,
       secure: false, // upgrade later with STARTTLS
       auth: {
-        user: "cornel.siclovan@gmail.com",
-        pass: process.env.BREVO_API_KEY,
+        user: "carla.licenta@gmail.com",
+        pass: `${process.env.BREVO_API_KEY}`,
       },
     });
     
@@ -185,7 +185,7 @@ exports.confirmAccount = async (req, res, next) => {
     }
 
     if (Date.parse(user.registryTokenExpiration) / 1000 > Date.now()) {
-      const error = new Error("Token expired");
+      const error = new Error("Token expired!");
       error.statusCode = 401;
       throw error;
     }
@@ -195,7 +195,7 @@ exports.confirmAccount = async (req, res, next) => {
 
     await user.save();
     res.status(200).json({
-      message: "Account activated",
+      message: "Account activated!",
     });
 
   } catch (error) {
@@ -232,7 +232,7 @@ exports.confirmAccountFromEmail = async (req, res, next) => {
     }
 
     if (Date.parse(user.registryTokenExpiration) / 1000 > Date.now()) {
-      const error = new Error("Token expired");
+      const error = new Error("Token expired!");
       error.statusCode = 401;
       throw error;
     }
@@ -248,7 +248,7 @@ exports.confirmAccountFromEmail = async (req, res, next) => {
   res.end()
 
     res.status(200).json({
-      message: "Account activated",
+      message: "Account activated!",
     });
   } catch (error) {
     next(error);
@@ -322,20 +322,20 @@ exports.postNewPassword = async (req, res, next) => {
       throw error;
     }
     if (!newPassword) {
-      const error = new Error("New password is needed");
+      const error = new Error("New password is needed.");
       error.statusCode = 401;
       throw error;
     }
 
     if (!newRepeatPassword) {
-      const error = new Error("New password repeat is needed");
+      const error = new Error("New password repeat is needed.");
       error.statusCode = 401;
       throw error;
     }
 
 
     if (newPassword !== newRepeatPassword) {
-      const error = new Error("Passwords do not match");
+      const error = new Error("Passwords do not match.");
       error.statusCode = 401;
       throw error;
     }

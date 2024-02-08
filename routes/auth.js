@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/signup", [
   body("email")
     .isEmail()
-    .withMessage("Please enter a valid email")
+    .withMessage("Please enter a valid email!")
     .custom((value, { req }) => {
       return User.findOne({ email: value }).then((userDoc) => {
         if (userDoc) {
@@ -21,11 +21,11 @@ router.post("/signup", [
   body("repeatPassword")
     .custom((value, { req }) => {
       if (!value) {
-        return Promise.reject("Repeat password cannot be empty");
+        return Promise.reject("Repeat password cannot be empty.");
       }
 
       if (value !== req.body.password) {
-        return Promise.reject("Repeat password does not match password");
+        return Promise.reject("Repeat password does not match password.");
       }
 
       return true;
@@ -34,8 +34,8 @@ router.post("/signup", [
   body("password")
     .trim()
     .isLength({ min: 3 })
-    .withMessage("Password must be minimum of 5 characters"),
-  body("name").trim().not().isEmpty().withMessage("Name cannot be empty"),
+    .withMessage("Password must be minimum of 5 characters."),
+  body("name").trim().not().isEmpty().withMessage("Name cannot be empty."),
 ], authController.signup);
 
 
@@ -45,7 +45,7 @@ router.post("/signup", [
 router.post("/login", [
   body("email")
     .isEmail()
-    .withMessage("Please enter a valid email address")
+    .withMessage("Please enter a valid email address.")
     .normalizeEmail({ gmail_remove_dots: false }),
 ], authController.login)
 
@@ -69,7 +69,7 @@ router.get(
 router.post("/reset", [
   body("email")
     .isLength({ min: 3 })
-    .withMessage("Please enter a valid email ghggg")
+    .withMessage("Please enter a valid email.")
     .custom((value, { req }) => {
       return User.findOne({ where: { email: value } }).then((userDoc) => {
         if (body("email").isEmail()) {
@@ -92,14 +92,14 @@ router.post(
     body("password")
       .trim()
       .isLength({ min: 3 })
-      .withMessage("Password must be minimum of 5 characters"),
+      .withMessage("Password must be minimum of 5 characters."),
     body("repeatPassword").custom((value, { req }) => {
       if (!value) {
-        return Promise.reject("Repeat password cannot be empty");
+        return Promise.reject("Repeat password cannot be empty.");
       }
 
       if (value !== req.body.password) {
-        return Promise.reject("Repeat password does not match password");
+        return Promise.reject("Repeat password does not match password.");
       }
 
       return true;

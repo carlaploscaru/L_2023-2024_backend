@@ -3,6 +3,7 @@ const { Place } = require("../models/place");
 const { Sale } = require("../models/sales");
 const { Category } = require("../models/category");
 const { User } = require("../models/user");
+var nodemailer = require('nodemailer');
 
 exports.addSale = async (req, res, next) => {
   const errors = validationResult(req);
@@ -52,11 +53,14 @@ exports.addSale = async (req, res, next) => {
         (ds_req.getTime() <= ds.getTime() && de_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime()) ||
         (ds_req.getTime() >= ds.getTime() && ds_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime())
       ) {
-        const error = new Error("The solicitated date is not available");
+        const error = new Error("The solicitated date is not available!");
         error.statusCode = 401;
         throw error;
       }
     });
+
+
+    let user= await User.findById(req.userId)
 
     let sale = new Sale({
       client: req.userId,
@@ -73,9 +77,37 @@ exports.addSale = async (req, res, next) => {
     });
    
 
-   
-
     await sale.save();
+
+    var transporter = nodemailer.createTransport({
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      secure: false, // upgrade later with STARTTLS
+      auth: {
+        user: "carla.licenta@gmail.com",
+        pass: `${process.env.BREVO_API_KEY}`,
+      },
+    });
+    
+    var mailOptions = {
+      from: 'office@rezervari.ro',
+      to: user.email,
+      subject: 'Your rezervation',
+      text:`You rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. Thank you.`
+    };
+
+    try{
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });  
+    } catch(err) {
+      console.log(err);
+    }
+
 
     res.status(200).send(sale);
   } catch (error) {
@@ -83,7 +115,7 @@ exports.addSale = async (req, res, next) => {
   }
 };
 
-exports.getSalesByUserId = async (req, res, send) => {
+exports.getSalesByUserId = async (req, res, next) => {
 
   const reservations = await Sale.find({ client: req.userId })
 
@@ -109,6 +141,8 @@ exports.getSalesByUserId = async (req, res, send) => {
         currency: place.currency || "",
         owner: owner.name,
         image: place.image,
+        rating:rezv.rating || 0,
+        
       };
     })
   );
@@ -117,7 +151,7 @@ exports.getSalesByUserId = async (req, res, send) => {
 }
 
 
-exports.getClientsByOwnerId = async (req, res, send) => {
+exports.getClientsByOwnerId = async (req, res, next) => {
   const place = await Place.find({ owner: req.userId })
   const reservations = await Sale.find({ owner: req.userId })
 
@@ -143,8 +177,44 @@ exports.getClientsByOwnerId = async (req, res, send) => {
         currency: place.currency || "",
         image: place.image,
         client: client.name,
+        rating:rezv.rating || 0,
       };
     })
   );
   res.status(200).send({ clients: revzToSend });
 }
+
+
+
+
+exports.rateSale = async (req, res, next) => {
+  const saleId = req.params.saleId;
+
+  const errors = validationResult(req);
+ 
+  try{
+
+    if (!errors.isEmpty()) {
+      const error = new Error("Rating failed!");
+      error.statusCode = 422;
+      error.data = errors.array();
+      throw error;
+    }
+      const sale= await Sale.findById(saleId);
+
+      if (!sale) {//cast id(verify sale id length)
+        const error = new Error("This resevation does not exist!");
+        error.statusCode = 422;
+        throw error;
+      }
+
+      sale.rating=req.body.rating;
+      sale.comment=req.body.comment;
+
+      await sale.save();
+      res.status(200).send({sale});
+  }catch(err){
+    next(err);
+  }
+ 
+};

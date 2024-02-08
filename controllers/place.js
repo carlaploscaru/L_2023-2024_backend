@@ -97,63 +97,63 @@ exports.addPlace = async (req, res, next) => {
         let errors = [];
 
         if (!req.body.title) {
-            const error = new Error("Proprietatea trebuie sa aiba titlu");
+            const error = new Error("The property must have title!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.suprafata && !Number.isInteger(req.body.suprafata)) {
             const error = new Error(
-                "Proprietatea trebuie sa aiba suprafata si aceasta valoare sa fie numar intreg"
+                "The property must have surface and the number must be integer!"
             );
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.tara) {
-            const error = new Error("Proprietatea trebuie sa aiba tara");
+            const error = new Error("The property must have country!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.oras) {
-            const error = new Error("Proprietatea trebuie sa aiba oras");
+            const error = new Error("The property must have city!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.strada) {
-            const error = new Error("Proprietatea trebuie sa aiba strada");
+            const error = new Error("The property must have street!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.judet) {
-            const error = new Error("Proprietatea trebuie sa aiba judet");
+            const error = new Error("The property must have region!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.price) {
-            const error = new Error("Proprietatea trebuie sa aiba pret");
+            const error = new Error("The property must have price!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.currency) {
-            const error = new Error("Tipul de valuat trebuie introdus");
+            const error = new Error("The valute type must be introduced!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.categoryId) {
-            const error = new Error("Proprietatea trebuie sa aiba categorie");
+            const error = new Error("The property must have category!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.files["image"]) {
-            const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
+            const error = new Error("The property must have at least one image!");
             error.statusCode = 422;
             errors.push(error.message);
         }
@@ -161,7 +161,7 @@ exports.addPlace = async (req, res, next) => {
         //console.log(errors);
 
         if (errors.length !== 0) {
-            const error = new Error("Adaugare proprietate esuata");
+            const error = new Error("Add property failed!");
             error.statusCode = 401;
             error.data = errors;
 
@@ -236,6 +236,10 @@ exports.getPlaces = async (req, res, next) => {
             places.map(async (place) => {
                 owner = await User.findById(place.owner);
                 category = await Category.findById(place.category);
+
+                let saleQueryObject={};
+                saleQueryObject.place=place._id;
+
                    
                 //testez date_start in between
                 if (req.query.data_start && req.query.data_end) {
@@ -303,7 +307,7 @@ exports.getPlaceById = async (req, res, next) => {
 
 
         if (!place) {
-            const error = new Error("There is no place for this id");
+            const error = new Error("There is no place for this id!");
             error.statusCode = 401;
             throw error;
         }
@@ -350,57 +354,57 @@ exports.editPlace = async (req, res, next) => {
         let errors = [];
 
         if (!req.body.title) {
-            const error = new Error("Proprietatea trebuie sa aiba titlu");
+            const error = new Error("The property must have title!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.suprafata && !Number.isInteger(req.body.suprafata)) {
             const error = new Error(
-                "Proprietatea trebuie sa aiba suprafata si aceasta valoare sa fie numar intreg"
+                "The property must have surface and the number must be integer!"
             );
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.tara) {
-            const error = new Error("Proprietatea trebuie sa aiba tara");
+            const error = new Error("The property must have country!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.oras) {
-            const error = new Error("Proprietatea trebuie sa aiba oras");
+            const error = new Error("The property must have city!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.strada) {
-            const error = new Error("Proprietatea trebuie sa aiba strada");
+            const error = new Error("The property must have street!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.judet) {
-            const error = new Error("Proprietatea trebuie sa aiba judet");
+            const error = new Error("The property must have region!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.price) {
-            const error = new Error("Proprietatea trebuie sa aiba pret");
+            const error = new Error("The property must have price!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.currency) {
-            const error = new Error("Tipul de valuat trebuie introdus");
+            const error = new Error("The valute type must be introduced!");
             error.statusCode = 422;
             errors.push(error.message);
         }
 
         if (!req.body.categoryId) {
-            const error = new Error("Proprietatea trebuie sa aiba categorie");
+            const error = new Error("The property must have category!");
             error.statusCode = 422;
             errors.push(error.message);
         }
@@ -408,7 +412,7 @@ exports.editPlace = async (req, res, next) => {
         if (place.image.length > 0) {
         } else {
             if (!req.files["image"]) {
-                const error = new Error("Proprietatea trebuie sa aiba macar o imagine");
+                const error = new Error("The property must have at least one image!");
                 error.statusCode = 422;
                 errors.push(error.message);
             }

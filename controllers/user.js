@@ -25,7 +25,7 @@ exports.getMe = async (req, res, next) => {
   try {
     me = await User.findById(req.userId);
     if (!me) {
-      const error = new Error("Nu exist!");
+      const error = new Error("Not existing!");
       error.statusCode = 422;
       throw error;
     }
@@ -57,7 +57,7 @@ exports.editUser = async (req, res, next) => {
       }
 
       if (!req.body.name) {
-        const error = new Error(" Userul trebuie sa aiba nume!");
+        const error = new Error(" The user must have name!");
         error.statusCode = 422;
         errors.push(error.message);
       }

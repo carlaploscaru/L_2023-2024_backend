@@ -10,7 +10,7 @@ exports.addCategory  = async (req, res, next) => {
 
         console.log(category);
         if (category) {
-            return res.status(400).send({ message: "Category already exists" });
+            return res.status(400).send({ message: "Category already exists!" });
         }
 
         const title = req.body.title;
