@@ -29,7 +29,7 @@ exports.addSale = async (req, res, next) => {
       throw error;
     }
 
-    
+
 
     const sales = await Sale.find({ place: place._id });
 
@@ -60,7 +60,7 @@ exports.addSale = async (req, res, next) => {
     });
 
 
-    let user= await User.findById(req.userId)
+    let user = await User.findById(req.userId)
 
     let sale = new Sale({
       client: req.userId,
@@ -75,7 +75,7 @@ exports.addSale = async (req, res, next) => {
       telefon: req.body.telefon,
       pay_type: req.body.pay_type,
     });
-   
+
 
     await sale.save();
 
@@ -88,23 +88,23 @@ exports.addSale = async (req, res, next) => {
         pass: `${process.env.BREVO_API_KEY}`,
       },
     });
-    
+
     var mailOptions = {
       from: 'office@rezervari.ro',
       to: user.email,
       subject: 'Your rezervation',
-      text:`You rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. Thank you.`
+      text: `You rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. Thank you.`
     };
 
-    try{
-      transporter.sendMail(mailOptions, function(error, info){
+    try {
+      transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
           console.log(error);
         } else {
           console.log('Email sent: ' + info.response);
         }
-      });  
-    } catch(err) {
+      });
+    } catch (err) {
       console.log(err);
     }
 
@@ -141,8 +141,9 @@ exports.getSalesByUserId = async (req, res, next) => {
         currency: place.currency || "",
         owner: owner.name,
         image: place.image,
-        rating:rezv.rating || 0,
-        
+        rating: rezv.rating || 0,
+        comment: rezv.comment,
+
       };
     })
   );
@@ -177,7 +178,8 @@ exports.getClientsByOwnerId = async (req, res, next) => {
         currency: place.currency || "",
         image: place.image,
         client: client.name,
-        rating:rezv.rating || 0,
+        rating: rezv.rating || 0,
+        comment: rezv.comment,
       };
     })
   );
@@ -189,10 +191,10 @@ exports.getClientsByOwnerId = async (req, res, next) => {
 
 exports.rateSale = async (req, res, next) => {
   const saleId = req.params.saleId;
-
+  const userId = req.userId;
   const errors = validationResult(req);
- 
-  try{
+
+  try {
 
     if (!errors.isEmpty()) {
       const error = new Error("Rating failed!");
@@ -200,21 +202,103 @@ exports.rateSale = async (req, res, next) => {
       error.data = errors.array();
       throw error;
     }
-      const sale= await Sale.findById(saleId);
+    const sale = await Sale.findById(saleId);
 
-      if (!sale) {//cast id(verify sale id length)
-        const error = new Error("This resevation does not exist!");
-        error.statusCode = 422;
-        throw error;
-      }
+    if (sale.client != req.userId) {//for api hackers
+      const error = new Error("This resevation is not yours!");
+      error.statusCode = 422;
+      throw error;
+    }
 
-      sale.rating=req.body.rating;
-      sale.comment=req.body.comment;
+    if (!sale) {//cast id(verify sale id length)
+      const error = new Error("This resevation does not exist!");
+      error.statusCode = 422;
+      throw error;
+    }
 
-      await sale.save();
-      res.status(200).send({sale});
-  }catch(err){
+    sale.rating = req.body.rating;
+
+    await sale.save();
+    res.status(200).send({ sale });
+  } catch (err) {
     next(err);
   }
- 
+
 };
+
+
+
+
+exports.giveComment = async (req, res, next) => {
+  const saleId = req.params.saleId;
+  const errors = validationResult(req);
+  const userId = req.userId;//for who gave the comment
+
+  try {
+
+    if (!errors.isEmpty()) {
+      const error = new Error("Comment failed!");
+      error.statusCode = 422;
+      error.data = errors.array();
+      throw error;
+    }
+    const sale = await Sale.findById(saleId);
+
+
+    if (sale.client != req.userId) {//for api hackers
+      const error = new Error("This resevation is not yours!");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    if (!sale) {//cast id(verify sale id length)
+      const error = new Error("This resevation does not exist!");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    sale.comment = req.body.comment;
+
+    await sale.save();
+    res.status(200).send({ sale });
+  } catch (err) {
+    next(err);
+  }
+
+};
+
+
+exports.getCommentBySaleId = async (req, res, next) => {
+  const reservations = await Sale.find({ client: req.userId })
+
+  let revzToSend = await Promise.all(
+    reservations.map(async (rezv) => {
+      let place = await Place.findById(rezv.place);
+      let category = await Category.findById(place.category);
+      let owner = await User.findById(place.owner);
+
+
+      return {
+        _id: rezv._id,
+        place: place.title,
+        data_start: rezv.data_start,
+        data_end: rezv.data_end,
+        suprafata: place.suprafata,
+        category: category.title,
+        tara: place.tara,
+        oras: place.oras,
+        judet: place.judet,
+        strada: place.strada,
+        price: rezv.price || "",
+        currency: place.currency || "",
+        owner: owner.name,
+        image: place.image,
+        rating: rezv.rating || 0,
+        comment: rezv.comment,
+
+      };
+    })
+  );
+  res.status(200).send({ reservations: revzToSend });
+
+}

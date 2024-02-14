@@ -41,10 +41,18 @@ router.put(
         body("rateing")
             .isInt({ min: 0, max: 5})
             .withMessage("Minim value is 0, maxim is 5."),
-        body("comment")
-            .isLength({ min: 3 })
-            .withMessage("Comment can't be empty!"),
+     
     ]
 );
+
+router.put(
+    "/:saleId/comment", isAuth, saleControler.giveComment,[
+        body("comment")
+        .isLength({ min: 3 })
+        .withMessage("Comment must be min 3 characters!"),
+     
+    ]
+);
+
 
 module.exports = router;

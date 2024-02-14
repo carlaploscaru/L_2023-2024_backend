@@ -237,13 +237,26 @@ exports.getPlaces = async (req, res, next) => {
                 owner = await User.findById(place.owner);
                 category = await Category.findById(place.category);
 
-                let saleQueryObject={};
-                saleQueryObject.place=place._id;
+                let saleQueryObject = {};
+                saleQueryObject.place = place._id;
 
-                   
+                let rating = 0;
+                const salesForRating = await Sale.find({ place: place._id });
+
+                salesForRating.map((sale) => {
+                    if(sale.rating)
+                    rating += sale.rating;
+                })
+                
+                if(salesForRating.length > 0){
+                    rating = Math.round(rating / salesForRating.length);
+                  }
                 //testez date_start in between
                 if (req.query.data_start && req.query.data_end) {
                     const sales = await Sale.find({ place: place._id });
+
+
+
 
                     sales.forEach(sale => {
                         console.log(sale);
@@ -251,7 +264,7 @@ exports.getPlaces = async (req, res, next) => {
                         const de = new Date(sale.data_end);
                         const ds_req = new Date(req.query.data_start);
                         const de_req = new Date(req.query.data_end);
-                        
+
                         console.log(ds_req.getTime() < ds.getTime());
 
 
@@ -278,7 +291,8 @@ exports.getPlaces = async (req, res, next) => {
                     currency: place.currency || "",
                     category: category.title,
                     owner: owner.name,
-                    image: place.image
+                    image: place.image,
+                    rating: rating,
                 };
             })
         );
