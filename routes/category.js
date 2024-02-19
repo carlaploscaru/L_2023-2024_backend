@@ -9,5 +9,11 @@ const router = express.Router();
 router.get("/", categoryController.getCategories);
 router.get("/:categoryId", categoryController.getCategoryById);
 router.post("/", isAuth, isAdmin, categoryController.addCategory);
-router.patch("/:categoryId", isAdmin, isAuth, categoryController.editCategory);
+router.patch("/:categoryId", isAuth, isAdmin, categoryController.editCategory);
+router.delete("/:categoryId",  isAuth, isAdmin, categoryController.deleteCategory);
+
+
+
+
+
 module.exports = router;

@@ -116,13 +116,13 @@ exports.addSale = async (req, res, next) => {
 };
 
 exports.getSalesByUserId = async (req, res, next) => {
-
+  try{
   const reservations = await Sale.find({ client: req.userId })
 
   let revzToSend = await Promise.all(
     reservations.map(async (rezv) => {
       let place = await Place.findById(rezv.place);
-      let category = await Category.findById(place.category);
+      let category = await Category.findById(place.category);/////////////////////////////////////////////////////////////////////////////////
       let owner = await User.findById(place.owner);
 
 
@@ -148,11 +148,15 @@ exports.getSalesByUserId = async (req, res, next) => {
     })
   );
   res.status(200).send({ reservations: revzToSend });
-
+  }catch(err){
+next(err);
+  }
 }
 
 
 exports.getClientsByOwnerId = async (req, res, next) => {
+
+  try{
   const place = await Place.find({ owner: req.userId })
   const reservations = await Sale.find({ owner: req.userId })
 
@@ -184,6 +188,9 @@ exports.getClientsByOwnerId = async (req, res, next) => {
     })
   );
   res.status(200).send({ clients: revzToSend });
+  }catch(err){
+    next(err)
+  }
 }
 
 
