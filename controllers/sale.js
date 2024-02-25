@@ -122,7 +122,7 @@ exports.getSalesByUserId = async (req, res, next) => {
   let revzToSend = await Promise.all(
     reservations.map(async (rezv) => {
       let place = await Place.findById(rezv.place);
-      let category = await Category.findById(place.category);/////////////////////////////////////////////////////////////////////////////////
+      let category = await Category.findById(place.category);
       let owner = await User.findById(place.owner);
 
 
