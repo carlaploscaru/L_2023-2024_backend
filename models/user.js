@@ -40,9 +40,13 @@ const userSchema = mongoose.Schema({//obj relational mapping
     image: {
         type: String,
         required: false
-      }
+    },
+    enabled: {
+        type: String,
+        require: false,
+    }
 
 });
 
-const User=mongoose.model("User", userSchema);
-exports.User=User;//daca nu fac export nu pot sa fac import in alt loc
+const User = mongoose.model("User", userSchema);
+exports.User = User;//daca nu fac export nu pot sa fac import in alt loc

@@ -192,6 +192,7 @@ exports.confirmAccount = async (req, res, next) => {
 
     user.registryToken = null;
     user.registryTokenExpiration = null;
+    user.enabled= "1";
 
     await user.save();
     res.status(200).json({

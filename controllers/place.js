@@ -234,9 +234,9 @@ exports.getPlaces = async (req, res, next) => {
 
         let placesToSend = await Promise.all(
             places.map(async (place) => {
-                owner = await User.findById(place.owner);
+                
                 category = await Category.findById(place.category);
-
+            
                 let saleQueryObject = {};
                 saleQueryObject.place = place._id;
 
@@ -255,7 +255,7 @@ exports.getPlaces = async (req, res, next) => {
                 if (req.query.data_start && req.query.data_end) {
                     const sales = await Sale.find({ place: place._id });
 
-
+                    
 
 
                     sales.forEach(sale => {
@@ -279,6 +279,8 @@ exports.getPlaces = async (req, res, next) => {
                     });
                 }
 
+                owner = await User.findById(place.owner);
+
                 return {
                     _id: place._id,
                     title: place.title,
@@ -291,6 +293,7 @@ exports.getPlaces = async (req, res, next) => {
                     currency: place.currency || "",
                     category: category.title,
                     owner: owner.name,
+                    ownerEnabled: owner.enabled,
                     image: place.image,
                     rating: rating,
                 };
@@ -298,15 +301,15 @@ exports.getPlaces = async (req, res, next) => {
         );
         let filteredPlacesToSend = [];
         placesToSend.forEach(place => {
-            if (placesBookedOnThatPeriod.includes(place._id)) {
+            if (placesBookedOnThatPeriod.includes(place._id) || place.ownerEnabled === "0") {
 
             } else {
                 filteredPlacesToSend.push(place);
             }
         })
+// console.log("1",owner.enable, owner.name);
 
-
-        res.status(200).send({ places: filteredPlacesToSend });
+        res.status(200).send({ places: filteredPlacesToSend , totalItems: filteredPlacesToSend.length});
     } catch (error) {
         next(error)
     }
@@ -329,6 +332,13 @@ exports.getPlaceById = async (req, res, next) => {
         const owner = await User.findById(place.owner);
         const category = await Category.findById(place.category);
 
+        let placeToSend;
+        if(owner.enabled ==="0"){
+            const error = new Error("There is no permission!");
+            error.statusCode = 401;
+            throw error;
+        }else{
+
         const placeToSend = {
             _id: place._id,
             title: place.title,
@@ -343,6 +353,7 @@ exports.getPlaceById = async (req, res, next) => {
             owner: { name: owner.name, id: owner._id },
             image: place.image,
         };
+    }
 
         res.status(200).send({ place: placeToSend });
     } catch (error) {

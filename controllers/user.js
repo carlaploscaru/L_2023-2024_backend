@@ -1,3 +1,4 @@
+const { Place } = require("../models/place");
 const { User } = require("../models/user");
 const { validationResult } = require("express-validator");
 
@@ -6,17 +7,26 @@ exports.getUsers = async (req, res, next) => {
   let usersToSend = [];
 
   try {
-    users = await User.find();
+    users = await User.find(); // returneaza un array de obiecte
+
+   
 
     usersToSend = users.map((user) => {
-      return { _id: user._id, name: user.name, email: user.email };
-    });
+      if (!user.enabled) {
+        user.enable = "1"
+      }
+      return { _id: user._id, name: user.name, email: user.email, enabled: user.enabled };
+    }); // parcurge array users si returneaza in alt array usersToSend obiectele refacute din obiectul anterior
 
-    res.status(200).send(usersToSend);
+    //res.status(200).send(usersToSend); // trimit un array [{}, {}]
+    res.status(200).send({ users: usersToSend }) // trimit {users: [{}, {}]};
   } catch (error) {
     next(error);
   }
 };
+
+
+
 
 exports.getMe = async (req, res, next) => {
   let me = null;
@@ -44,7 +54,7 @@ exports.getMe = async (req, res, next) => {
 };
 
 exports.editUser = async (req, res, next) => {
-  
+
 
   const userId = req.userId;
   try {
@@ -61,7 +71,7 @@ exports.editUser = async (req, res, next) => {
         error.statusCode = 422;
         errors.push(error.message);
       }
-      
+
 
 
       if (errors.length !== 0) {
@@ -70,7 +80,7 @@ exports.editUser = async (req, res, next) => {
         error.data = errors;
         throw error;
       }
-      
+
       console.log(req.files["image"]);
 
       if (req.files && req.files["image"]) {
@@ -78,6 +88,29 @@ exports.editUser = async (req, res, next) => {
       }
       await user.save();
     }
+
+    res.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
+exports.blockUnblockUser = async (req, res, next) => {
+
+  const userId = req.params.userId;
+ console.log(userId)
+  try {
+    let user = await User.findById(userId);
+
+    if (user.enabled === "1" || !user.enabled) {
+      user.enabled = "0";
+    }else if (user.enabled === "0") {
+      user.enabled = "1";
+    }
+    await user.save();
 
     res.status(200).send(user);
   } catch (error) {

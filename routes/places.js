@@ -5,6 +5,7 @@ const { body } = require("express-validator");
 const { Category } = require("../models/category");
 const router = express.Router();
 const fileUpload = require("../middleware/file-upload");
+const isEnabled = require("../middleware/is-enabled");
 
 
 router.post('/', [
@@ -41,7 +42,7 @@ router.post('/', [
     //         }
     //     });
     // }),
-], isAuth, fileUpload.fields([{ name: 'image', maxCount: 12 }, { name: 'docs', maxCount: 12 }]), placeController.addPlace);//pt folosire middleware, is_auth face verificarea autenticitatii//router.post("/", placeController.addPlace);
+], isAuth,isEnabled, fileUpload.fields([{ name: 'image', maxCount: 12 }, { name: 'docs', maxCount: 12 }]), placeController.addPlace);//pt folosire middleware, is_auth face verificarea autenticitatii//router.post("/", placeController.addPlace);
 router.get('/', placeController.getPlaces);
 router.get('/:placeId', placeController.getPlaceById)
 router.patch('/:placeId', [
@@ -77,7 +78,7 @@ router.patch('/:placeId', [
     //         }
     //     });
     // }),
-], isAuth, fileUpload.fields([{ name: 'image', maxCount: 12 }, { name: 'docs', maxCount: 12 }]), placeController.editPlace);
+], isAuth, isEnabled, fileUpload.fields([{ name: 'image', maxCount: 12 }, { name: 'docs', maxCount: 12 }]), placeController.editPlace);
 
 
 router.delete("/:placeId", isAuth, placeController.deletePlace)
