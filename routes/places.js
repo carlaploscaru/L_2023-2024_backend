@@ -45,6 +45,7 @@ router.post('/', [
 ], isAuth,isEnabled, fileUpload.fields([{ name: 'image', maxCount: 12 }, { name: 'docs', maxCount: 12 }]), placeController.addPlace);//pt folosire middleware, is_auth face verificarea autenticitatii//router.post("/", placeController.addPlace);
 router.get('/', placeController.getPlaces);
 router.get('/:placeId', placeController.getPlaceById)
+router.get('/owner/:ownerId', placeController.getPlacesByOwnerId)
 router.patch('/:placeId', [
     // body("title")
     //     .trim()
@@ -83,5 +84,7 @@ router.patch('/:placeId', [
 
 router.delete("/:placeId", isAuth, placeController.deletePlace)
 router.delete("/image/:imageAndPlaceId", isAuth, placeController.deleteImageByPlaceAndImgId);
+
+
 
 module.exports = router;

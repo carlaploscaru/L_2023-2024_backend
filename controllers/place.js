@@ -207,7 +207,9 @@ exports.addPlace = async (req, res, next) => {
 exports.getPlaces = async (req, res, next) => {
     let places = [];
     let queryObject = {};
+    let page=+req.query.page || 1;//+pt ca e string si vreau sa il fac numar
 
+     const count=await Place.countDocuments(queryObject);
 
     try {
         if (req.query.oras) {
@@ -224,7 +226,7 @@ exports.getPlaces = async (req, res, next) => {
 
 
 
-        places = await Place.find(queryObject);
+        places = await Place.find(queryObject).limit(2).skip(2*(page-1));
         let owner;
         let category;
 
@@ -234,9 +236,9 @@ exports.getPlaces = async (req, res, next) => {
 
         let placesToSend = await Promise.all(
             places.map(async (place) => {
-                
-                category = await Category.findById(place.category);
-            
+
+
+
                 let saleQueryObject = {};
                 saleQueryObject.place = place._id;
 
@@ -244,18 +246,29 @@ exports.getPlaces = async (req, res, next) => {
                 const salesForRating = await Sale.find({ place: place._id });
 
                 salesForRating.map((sale) => {
-                    if(sale.rating)
-                    rating += sale.rating;
+                    if (sale.rating)
+                        rating += sale.rating;
                 })
-                
-                if(salesForRating.length > 0){
+
+
+                if (salesForRating.length > 0) {
                     rating = Math.round(rating / salesForRating.length);
-                  }
+                }
+                /////////////////////////////////////
+                // let category, owner;
+                // try {
+                //     category = await Category.findById(place.category);
+                //     owner = await User.findById(place.owner);
+                // } catch (error) {
+                //     console.error("Error retrieving category or owner:", error);
+                // }
+
+                /////////////////////////////////
                 //testez date_start in between
                 if (req.query.data_start && req.query.data_end) {
                     const sales = await Sale.find({ place: place._id });
 
-                    
+
 
 
                     sales.forEach(sale => {
@@ -279,7 +292,14 @@ exports.getPlaces = async (req, res, next) => {
                     });
                 }
 
-                owner = await User.findById(place.owner);
+
+                let thisOwner;
+                let thisEnabled;
+                await User.findById(place.owner).then(data => { thisOwner=data.name, thisEnabled=data.enabled})
+               
+                   category = await Category.findById(place.category);
+                   
+              
 
                 return {
                     _id: place._id,
@@ -291,9 +311,12 @@ exports.getPlaces = async (req, res, next) => {
                     strada: place.strada,
                     price: place.price || "",
                     currency: place.currency || "",
+                    // category: category ? category.title : "Unknown", 
+                    // owner: owner ? owner.name : "Unknown", 
+                    // ownerEnabled: owner ? owner.enabled : false, 
                     category: category.title,
-                    owner: owner.name,
-                    ownerEnabled: owner.enabled,
+                    owner: thisOwner,
+                    ownerEnabled: thisEnabled,
                     image: place.image,
                     rating: rating,
                 };
@@ -302,14 +325,14 @@ exports.getPlaces = async (req, res, next) => {
         let filteredPlacesToSend = [];
         placesToSend.forEach(place => {
             if (placesBookedOnThatPeriod.includes(place._id) || place.ownerEnabled === "0") {
-
+                        count=count-1;
             } else {
                 filteredPlacesToSend.push(place);
             }
         })
-// console.log("1",owner.enable, owner.name);
 
-        res.status(200).send({ places: filteredPlacesToSend , totalItems: filteredPlacesToSend.length});
+        res.status(200).send({ places: filteredPlacesToSend, totalItems: count });
+
     } catch (error) {
         next(error)
     }
@@ -333,33 +356,50 @@ exports.getPlaceById = async (req, res, next) => {
         const category = await Category.findById(place.category);
 
         let placeToSend;
-        if(owner.enabled ==="0"){
+        if (owner.enabled === "0") {
             const error = new Error("There is no permission!");
             error.statusCode = 401;
             throw error;
-        }else{
+        } else {
 
-        const placeToSend = {
-            _id: place._id,
-            title: place.title,
-            suprafata: place.suprafata,
-            tara: place.tara,
-            oras: place.oras,
-            judet: place.judet,
-            strada: place.strada,
-            price: place.price || "",
-            currency: place.currency || "",
-            category: category,
-            owner: { name: owner.name, id: owner._id },
-            image: place.image,
-        };
-    }
+            placeToSend = {
+                _id: place._id,
+                title: place.title,
+                suprafata: place.suprafata,
+                tara: place.tara,
+                oras: place.oras,
+                judet: place.judet,
+                strada: place.strada,
+                price: place.price || "",
+                currency: place.currency || "",
+                category: category,
+                owner: { name: owner.name, id: owner._id },
+                image: place.image,
+            };
+        }
+        //console.log("cevaaaaaaaaaaaaaaaaaaaaaaaaaaa", place.title)
 
         res.status(200).send({ place: placeToSend });
+       // res.status(200).send({ place });
     } catch (error) {
         next(error);
     }
 };
+
+
+
+
+exports.getPlacesByOwnerId = async (req, res, next) => {
+    try {
+        const ownerId = req.params.ownerId;
+        const place = await Place.find({ owner: ownerId });
+
+        res.status(200).send({ place });
+    } catch (err) {
+        next(err);
+    }
+}
+
 
 
 exports.editPlace = async (req, res, next) => {
