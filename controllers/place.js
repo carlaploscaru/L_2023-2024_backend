@@ -208,8 +208,9 @@ exports.getPlaces = async (req, res, next) => {
     let places = [];
     let queryObject = {};
     let page=+req.query.page || 1;//+pt ca e string si vreau sa il fac numar
+    let itemsPerpage=+req.query.itemsperpage || 2;
 
-     const count=await Place.countDocuments(queryObject);
+    
 
     try {
         if (req.query.oras) {
@@ -224,9 +225,9 @@ exports.getPlaces = async (req, res, next) => {
             queryObject.tara = req.query.tara;
         }
 
+        const count = await Place.countDocuments(queryObject);
 
-
-        places = await Place.find(queryObject).limit(2).skip(2*(page-1));
+        places = await Place.find(queryObject).limit(itemsPerpage).skip(itemsPerpage*(page-1));
         let owner;
         let category;
 
@@ -325,7 +326,7 @@ exports.getPlaces = async (req, res, next) => {
         let filteredPlacesToSend = [];
         placesToSend.forEach(place => {
             if (placesBookedOnThatPeriod.includes(place._id) || place.ownerEnabled === "0") {
-                        count=count-1;
+                        count = count - 1;
             } else {
                 filteredPlacesToSend.push(place);
             }
