@@ -156,8 +156,13 @@ exports.addPlace = async (req, res, next) => {
             const error = new Error("The property must have at least one image!");
             error.statusCode = 422;
             errors.push(error.message);
-        }
+        } 
 
+        if (!req.body.virtualTour) {
+            const error = new Error("The should  have a virtual tour!");
+            error.statusCode = 422;
+            errors.push(error.message);
+        }
         //console.log(errors);
 
         if (errors.length !== 0) {
@@ -210,7 +215,41 @@ exports.getPlaces = async (req, res, next) => {
     let page=+req.query.page || 1;//+pt ca e string si vreau sa il fac numar
     let itemsPerpage=+req.query.itemsperpage || 2;
 
+    let placesBookedOnThatPeriod = [];
+
+    let users= await User.find();
+    let disabledUserIds=[];
+
+    users.forEach(user =>{
+        if(user.enabled !== "1") disabledUserIds.push(user._id);
+    });
     
+    if (req.query.data_start && req.query.data_end) {
+        const sales = await Sale.find();
+
+
+        sales.forEach(sale => {
+            console.log(sale);
+            const ds = new Date(sale.data_start);
+            const de = new Date(sale.data_end);
+            const ds_req = new Date(req.query.data_start);
+            const de_req = new Date(req.query.data_end);
+
+            console.log(ds_req.getTime() < ds.getTime());
+
+
+            if (
+                (ds_req.getTime() <= ds.getTime() && de_req.getTime() > de.getTime()) ||
+                (ds_req.getTime() <= ds.getTime() && de_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime()) ||
+                (ds_req.getTime() >= ds.getTime() && ds_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime())
+            ) {
+                console.log("aici");
+                placesBookedOnThatPeriod.push(sale.place._id);
+            }
+        });
+    }
+    queryObject._id={$nin: placesBookedOnThatPeriod}
+    queryObject.owner={$nin: disabledUserIds}
 
     try {
         if (req.query.oras) {
@@ -225,15 +264,18 @@ exports.getPlaces = async (req, res, next) => {
             queryObject.tara = req.query.tara;
         }
 
-        const count = await Place.countDocuments(queryObject);
+        let count = await Place.countDocuments(queryObject);
 
-        places = await Place.find(queryObject).limit(itemsPerpage).skip(itemsPerpage*(page-1));
+        places = await Place.find(queryObject)
+        .limit(itemsPerpage)
+        .skip(itemsPerpage*(page-1));
+
         let owner;
         let category;
 
 
 
-        let placesBookedOnThatPeriod = [];
+        //let placesBookedOnThatPeriod = [];
 
         let placesToSend = await Promise.all(
             places.map(async (place) => {
@@ -266,37 +308,37 @@ exports.getPlaces = async (req, res, next) => {
 
                 /////////////////////////////////
                 //testez date_start in between
-                if (req.query.data_start && req.query.data_end) {
-                    const sales = await Sale.find({ place: place._id });
+                // if (req.query.data_start && req.query.data_end) {
+                //     const sales = await Sale.find({ place: place._id });
 
 
 
 
-                    sales.forEach(sale => {
-                        console.log(sale);
-                        const ds = new Date(sale.data_start);
-                        const de = new Date(sale.data_end);
-                        const ds_req = new Date(req.query.data_start);
-                        const de_req = new Date(req.query.data_end);
+                //     sales.forEach(sale => {
+                //         console.log(sale);
+                //         const ds = new Date(sale.data_start);
+                //         const de = new Date(sale.data_end);
+                //         const ds_req = new Date(req.query.data_start);
+                //         const de_req = new Date(req.query.data_end);
 
-                        console.log(ds_req.getTime() < ds.getTime());
+                //         console.log(ds_req.getTime() < ds.getTime());
 
 
-                        if (
-                            (ds_req.getTime() <= ds.getTime() && de_req.getTime() > de.getTime()) ||
-                            (ds_req.getTime() <= ds.getTime() && de_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime()) ||
-                            (ds_req.getTime() >= ds.getTime() && ds_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime())
-                        ) {
-                            console.log("aici");
-                            placesBookedOnThatPeriod.push(place._id);
-                        }
-                    });
-                }
+                //         if (
+                //             (ds_req.getTime() <= ds.getTime() && de_req.getTime() > de.getTime()) ||
+                //             (ds_req.getTime() <= ds.getTime() && de_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime()) ||
+                //             (ds_req.getTime() >= ds.getTime() && ds_req.getTime() < de.getTime() && de_req.getTime() > ds.getTime())
+                //         ) {
+                //             console.log("aici");
+                //             placesBookedOnThatPeriod.push(place._id);
+                //         }
+                //     });
+                // }
 
 
                 let thisOwner;
                 let thisEnabled;
-                await User.findById(place.owner).then(data => { thisOwner=data.name, thisEnabled=data.enabled})
+                await User.findById(place.owner).then(data => { thisOwner=data.name, thisEnabled=data.enabled})//pt blocare
                
                    category = await Category.findById(place.category);
                    

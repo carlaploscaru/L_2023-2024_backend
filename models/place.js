@@ -63,6 +63,9 @@ const placeSchema = mongoose.Schema({//obj relational mapping
   },
   currency: {
     type: String
+  },
+  virtualTour: {
+    type: String
   }
 });
 

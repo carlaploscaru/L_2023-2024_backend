@@ -99,17 +99,24 @@ exports.editUser = async (req, res, next) => {
 
 
 exports.blockUnblockUser = async (req, res, next) => {
-
+  let me = null;//////
   const userId = req.params.userId;
  console.log(userId)
+
+ me = await User.findById(req.userId);/////
+ const meIdString = me._id.toString();/////
+
   try {
     let user = await User.findById(userId);
-
+   // console.log("66666666666666666666666666",meIdString === user._id.toString())
+ 
+    if(meIdString !== user._id.toString()){//////
     if (user.enabled === "1" || !user.enabled) {
       user.enabled = "0";
     }else if (user.enabled === "0") {
       user.enabled = "1";
     }
+  }
     await user.save();
 
     res.status(200).send(user);
