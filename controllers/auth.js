@@ -63,20 +63,25 @@ exports.signup = async (req, res, next) => {
     await user.save();//pt a pune in baza de date
 
     var transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false, // upgrade later with STARTTLS
-      auth: {
-        user: "carla.licenta@gmail.com",
-        pass: `${process.env.BREVO_API_KEY}`,
-      },
+      // host: "smtp-relay.brevo.com",
+      // port: 587,
+      // secure: false, // upgrade later with STARTTLS
+      // auth: {
+      //   user: "carla.licenta@gmail.com",
+      //   pass: `${process.env.BREVO_API_KEY}`,
+      // },
+      service:"hotmail",
+      auth:{
+        user:"carla.ploscaru@student.upt.ro",
+        pass:`${process.env.PASS}`
+      }
     });
-    
+   
     var mailOptions = {
-      from: 'office@rezervari.ro',
+      from: 'carla.ploscaru@student.upt.ro',
       to: email,
       subject: 'Sending Email using Node.js[nodemailer]',
-      text:'http://localhost:8000/confirm-account-registry/' + registryToken +' Your registry token is: '+ registryToken
+      text:'http://localhost:8000/confirm-account-registry/' + `${registryToken}` +' Your registry token is: '+ registryToken
     };
 
     try{
@@ -159,6 +164,7 @@ exports.login = async (req, res, next) => {
 
 exports.confirmAccount = async (req, res, next) => {
   const registryToken = req.body.registryToken;
+  console.log("-----------------2222222222222",registryToken)
   const errors = validationResult(req);
   try {
     if (!errors.isEmpty()) {
@@ -179,7 +185,7 @@ exports.confirmAccount = async (req, res, next) => {
     );
 
     if (!user) {
-      const error = new Error("This user does not exist!");
+      const error = new Error("This token is invalid!");
       error.statusCode = 422;
       throw error;
     }

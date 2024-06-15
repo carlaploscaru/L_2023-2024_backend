@@ -5,7 +5,6 @@ const categorySchema=mongoose.Schema({//obj relational mapping
         type: String,
         required: true
     }
-  
 });
 
 const Category=mongoose.model("Category",categorySchema);

@@ -158,11 +158,11 @@ exports.addPlace = async (req, res, next) => {
             errors.push(error.message);
         } 
 
-        if (!req.body.virtualTour) {
-            const error = new Error("The should  have a virtual tour!");
-            error.statusCode = 422;
-            errors.push(error.message);
-        }
+        // if (!req.body.virtualTour) {
+        //     const error = new Error("The should  have a virtual tour!");
+        //     error.statusCode = 422;
+        //     errors.push(error.message);
+        // }
         //console.log(errors);
 
         if (errors.length !== 0) {

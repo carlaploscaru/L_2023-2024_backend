@@ -46,7 +46,7 @@ exports.getMe = async (req, res, next) => {
       email: me.email,
       image: me.image
     };
-
+  
     res.status(200).send({ me: meToSend });
   } catch (err) {
     next(err);

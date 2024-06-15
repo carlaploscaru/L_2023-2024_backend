@@ -61,6 +61,9 @@ exports.addSale = async (req, res, next) => {
 
 
     let user = await User.findById(req.userId)
+    let owner = await User.findById(place.owner);
+
+  
 
     let sale = new Sale({
       client: req.userId,
@@ -84,24 +87,38 @@ exports.addSale = async (req, res, next) => {
       port: 587,
       secure: false, // upgrade later with STARTTLS
       auth: {
-        user: "carla.licenta@gmail.com",
+        user: "dagmar1coin@gmail.com",
         pass: `${process.env.BREVO_API_KEY}`,
       },
     });
 
-    var mailOptions = {
+    var mailOptionsBuyer = {
       from: 'office@rezervari.ro',
       to: user.email,
       subject: 'Your rezervation',
       text: `You rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. Thank you.`
     };
 
+    var mailOptionsOwner= {
+      from: 'office@rezervari.ro',
+      to: owner.email,
+      subject: 'Your property was reserved',
+      text: `Rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. To owner ${owner.name}.`
+    };
+
     try {
-      transporter.sendMail(mailOptions, function (error, info) {
+      transporter.sendMail(mailOptionsBuyer, function (error, info) {
         if (error) {
           console.log(error);
         } else {
           console.log('Email sent: ' + info.response);
+        }
+      });
+      transporter.sendMail(mailOptionsOwner, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent to owner: ' + info.response);
         }
       });
     } catch (err) {
