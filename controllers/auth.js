@@ -164,7 +164,6 @@ exports.login = async (req, res, next) => {
 
 exports.confirmAccount = async (req, res, next) => {
   const registryToken = req.body.registryToken;
-  console.log("-----------------2222222222222",registryToken)
   const errors = validationResult(req);
   try {
     if (!errors.isEmpty()) {
@@ -250,7 +249,7 @@ exports.confirmAccountFromEmail = async (req, res, next) => {
     await user.save();
 
     res.writeHead(302, {
-      Location: 'http://localhost:3000/auth?mode=login'
+      Location: 'http://localhost:8080/auth?mode=login'
     });
   res.end()
 

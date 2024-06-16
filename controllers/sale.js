@@ -83,24 +83,28 @@ exports.addSale = async (req, res, next) => {
     await sale.save();
 
     var transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false, // upgrade later with STARTTLS
-      auth: {
-        user: "dagmar1coin@gmail.com",
-        pass: `${process.env.BREVO_API_KEY}`,
-      },
+      // host: "smtp-relay.brevo.com",
+      // port: 587,
+      // secure: false, // upgrade later with STARTTLS
+      // auth: {
+      //   user: "dagmar1coin@gmail.com",
+      //   pass: `${process.env.BREVO_API_KEY}`,
+      // },
+      service:"hotmail",
+      auth:{
+        user:"carla.ploscaru@student.upt.ro",
+        pass:`${process.env.PASS}`
+      }
     });
-
     var mailOptionsBuyer = {
-      from: 'office@rezervari.ro',
+      from: 'carla.ploscaru@student.upt.ro',
       to: user.email,
       subject: 'Your rezervation',
       text: `You rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. Thank you.`
     };
 
     var mailOptionsOwner= {
-      from: 'office@rezervari.ro',
+      from: 'carla.ploscaru@student.upt.ro',
       to: owner.email,
       subject: 'Your property was reserved',
       text: `Rezerved the location ${place.title} at adress ${place.tara},${place.oras},${place.strada} on dates ${sale.data_start} till ${sale.data_end}. The total price is ${sale.price}. To owner ${owner.name}.`
